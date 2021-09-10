@@ -1,16 +1,16 @@
 from urllib.parse import urlparse
 
 from default_logger.defaultLogger import defaultLogger
-from scrapper.brand.mango.MangoElements import MangoElements
+from scrapper.brand.mango.webelements._WebElements import _WebElements
 from util.web.static import find_first_parent_href
 
 
-class MongoCategory:
+class Mango:
     def __init__(self, driver, logger=None):
         self.driver = driver
         self.logger = logger if logger else defaultLogger("Mongo")
 
-        self.elements = MangoElements(driver)
+        self.elements = _WebElements(driver, self.logger)
 
     def list_categories(self, url):
         return self.elements.categories.list_categories(url)
@@ -37,35 +37,29 @@ class MongoCategory:
 if __name__ == "__main__":
     from selenium.webdriver import Chrome
 
-    print("Test")
-    driver = Chrome("C:\selenium\chromedriver.exe")
-    driver.maximize_window()
+    def _categories(mango, url="https://shop.mango.com/de/herren"):
+        categories = mango.list_categories(url)
 
-    test = MongoCategory(driver)
-    _test = test.list_category("https://shop.mango.com/de/herren/t-shirts_c12018147")
-    print("***")
-    print(_test)
-    print("***")
-    print(len(_test))
-    print("***")
-    driver.close()
-    exit(0)
+        print("*"*8, "Categories", "*"*8)
+        print(categories)
+        print("-"*len("*"*8 + "Categories" + "*"*8))
+        print("Len(Cat)", len(categories))
+        print("*" * len("*" * 8 + "Categories" + "*" * 8))
 
-    categories = test.list_categories("https://shop.mango.com/de/herren")
-    print(categories)
-    print(len(categories))
+    def _category(mango, url="https://shop.mango.com/de/herren/t-shirts_c12018147"):
+        category = mango.list_category(url)
 
-    print("---")
-    i = 0
-    while True:
-        try:
-            articles = test.list_category(categories[i]["href"])
-            print(articles)
-            print(len(articles))
-            i = i + 1
-            break
-        except:
-            pass
-    print(5, categories[5])
+        print("*"*9, "Category", "*"*9)
+        print(category)
+        print("-"*len("*"*9 + "Category" + "*"*9))
+        print("Len(Cat)", len(category))
+        print("*" * len("*" * 9 + "Category" + "*" * 9))
 
-    #driver.close()  #
+
+
+    with Chrome("C:\selenium\chromedriver.exe") as driver:
+        driver.maximize_window()
+        mango = Mango(driver)
+
+        #_categories(mango=mango)
+        _category(mango=mango)

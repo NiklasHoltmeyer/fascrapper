@@ -8,16 +8,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from util.web.dynamic import wait, scroll_end_of_page
 
 
-class MangoElements:
+class _WebElements:
     """ HTML Elements """
 
-    def __init__(self, driver, LOAD_VIEW_ELEMENTS=True):
+    def __init__(self, driver, logger, LOAD_VIEW_ELEMENTS=True):
         self.driver = driver
         self.selectors = _Mango_Selectors()
+        self.logger = logger
 
         if LOAD_VIEW_ELEMENTS:
-            self.category = _Mango_Category_Elements(driver)
-            self.categories = _Mango_Categories_Elements(driver)
+            self.category = _Mango_Category_Elements(driver, logger)
+            self.categories = _Mango_Categories_Elements(driver, logger)
 
     def header(self):
         header = self.driver.find_elements_by_css_selector("header")
@@ -50,9 +51,10 @@ class _Mango_Global_Elements:
 class _Mango_Category_Elements:
     """ List all Links/Images withing an Category (T-Shirts) """
 
-    def __init__(self, driver):
+    def __init__(self, driver, logger):
         self.driver = driver
-        self.elements = MangoElements(driver, LOAD_VIEW_ELEMENTS=False)
+        self.elements = _WebElements(driver, logger=logger, LOAD_VIEW_ELEMENTS=False)
+        self.logger = logger
 
     def load_html(self, url, timeout=1.5):
         self.driver.get(url)
@@ -76,6 +78,8 @@ class _Mango_Category_Elements:
                 time.sleep(timeout)
 
     def list_images(self, url):
+        self.logger.debug("Loading: ", url)
+
         html = self.load_html(url)
 
         doc = BeautifulSoup(html, "html.parser")
@@ -90,11 +94,13 @@ class _Mango_Categories_Elements:
         Sub-Categories: T-Shirt, Shorts, ...
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver, logger):
         self.driver = driver
-        self.elements = MangoElements(driver, LOAD_VIEW_ELEMENTS=False)
+        self.elements = _WebElements(driver, logger=logger, LOAD_VIEW_ELEMENTS=False)
+        self.logger = logger
 
     def load_sub_categories(self, url):
+        self.logger.debug("Loading Sub Category", url)
         self.driver.get(url)
         header = self.elements.header()
         hrefs = header.find_all(href=True)
