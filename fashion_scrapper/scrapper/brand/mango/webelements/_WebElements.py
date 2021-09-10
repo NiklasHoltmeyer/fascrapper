@@ -19,6 +19,7 @@ class _WebElements:
         if LOAD_VIEW_ELEMENTS:
             self.category = _Mango_Category_Elements(driver, logger)
             self.categories = _Mango_Categories_Elements(driver, logger)
+            self.article = _Mango_Article_Elements(driver, logger)
 
     def header(self):
         header = self.driver.find_elements_by_css_selector("header")
@@ -41,6 +42,11 @@ class _Mango_Selectors:
         CHANGE_VIEW_COLUMNS = 'navColumns4'  # ID to Change View from 2 to 4 Columns
         ACCEPT_COOKIES = "onetrust-accept-btn-handler"
         HEADER = "header"
+
+    class URLS:
+        BASE = "https://shop.mango.com"
+        LANGUAGE = "de"
+
 
 
 class _Mango_Global_Elements:
@@ -135,3 +141,69 @@ class _Mango_Categories_Elements:
                     urls.append(x["href"])
 
         return categories
+
+class _Mango_Article_Elements:
+    """
+    Parse Show-Page
+    """
+    def __init__(self, driver, logger):
+        self.driver = driver
+        self.elements = _WebElements(driver, logger=logger, LOAD_VIEW_ELEMENTS=False)
+        self.logger = logger
+
+        ##self.data = {}
+
+    def show(self, url):
+        doc = self._load_html(url)
+
+        def _parse_price(price):
+            _price = price.split(" ")
+            return {"value": _price[0], "currency": _price[1]}
+
+        return {
+            "name": doc.find(class_="product-name").text,
+            "color": doc.find(class_="colors-info-name").text,
+            "price": _parse_price(doc.find(class_="product-sale").text),
+            "images": self._list_item_images(doc),
+            "related_items": self._list_related_items(doc)
+        }
+
+    def _load_html(self, url):
+        self.driver.get(url)
+        wait(self.driver, EC.presence_of_element_located((By.ID, "renderedImages")))
+        scroll_end_of_page(self.driver, SCROLL_TOP=True)
+
+        container = self.driver.find_element(By.CLASS_NAME, "main-contentContainer")
+        container_html = container.get_attribute('innerHTML')
+
+        return BeautifulSoup(container_html, "html.parser")
+
+    def _list_item_images(self, doc):
+        """ List/Parse Images of Pivot-Item """
+
+        def parse_show_image(image_element):
+            """ Parse HTML-Attrs. for a Single Show-Image """
+            return {
+                "description": image_element["alt"].split(" - ")[-1].strip(),
+                "description-full": image_element["alt"],
+                "src-full": f"https:{image_element['src']}",
+                "src": f"https:{image_element['src']}".split("?")[0]
+            }
+
+        show_images_container = doc.find(id='renderedImages')
+        show_images = show_images_container.select("img")
+        return [parse_show_image(x) for x in show_images]
+
+    def _list_related_items(self, doc):
+        def _parse_links(id):
+            hrefs = [x.find(href=True)["href"] for x in doc.find_all(id=id)]
+            return [f"{self.elements.selectors.URLS.BASE}{x}" for x in hrefs]
+
+        return {
+            "similars": _parse_links(id="similars"),
+            "recommendations": _parse_links(id="recommendations"),
+            "other": _parse_links(id="lookTotal")
+        }
+
+
+

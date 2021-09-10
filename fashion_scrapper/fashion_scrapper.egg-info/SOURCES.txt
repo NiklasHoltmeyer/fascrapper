@@ -1,0 +1,17 @@
+setup.py
+default_logger/__init__.py
+default_logger/defaultLogger.py
+fashion_scrapper.egg-info/PKG-INFO
+fashion_scrapper.egg-info/SOURCES.txt
+fashion_scrapper.egg-info/dependency_links.txt
+fashion_scrapper.egg-info/top_level.txt
+scrapper/__init__.py
+scrapper/brand/__init__.py
+scrapper/brand/mango/Mango.py
+scrapper/brand/mango/__init__.py
+scrapper/brand/mango/webelements/_WebElements.py
+scrapper/brand/mango/webelements/__init__.py
+util/__init__.py
+util/web/__init__.py
+util/web/dynamic.py
+util/web/static.py

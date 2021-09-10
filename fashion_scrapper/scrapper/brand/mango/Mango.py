@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from default_logger.defaultLogger import defaultLogger
-from scrapper.brand.mango.webelements._WebElements import _WebElements
+from scrapper.brand.mango.webelements._WebElements import _WebElements, _Mango_Selectors
 from util.web.static import find_first_parent_href
 
 
@@ -21,7 +21,7 @@ class Mango:
             article_url = find_first_parent_href(preview_img)
             article_url = urlparse(article_url).path  # removing fragments / querys / ...
 
-            img_info["url"] = f"https://shop.mango.com/{article_url}".replace("//", "/")
+            img_info["url"] = f"{self.elements.selectors.URLS.BASE}/{article_url}".replace("//", "/")
 
             return img_info
 
@@ -32,6 +32,9 @@ class Mango:
         articles = list({x['url']: x for x in articles}.values())  # remove duplications (based on url)
 
         return articles
+
+    def show(self, url):
+        return self.elements.article.show(url)
 
 
 if __name__ == "__main__":
@@ -55,6 +58,16 @@ if __name__ == "__main__":
         print("Len(Cat)", len(category))
         print("*" * len("*" * 9 + "Category" + "*" * 9))
 
+    def _item(mango, url="https://shop.mango.com/de/herren/t-shirts-unifarben/meliertes-strick-t-shirt_17010542.html"):
+        item = mango.show(url)
+
+        print("*"*11, "Item", "*"*11)
+        print(item)
+        #print("-"*len("*"*11 + "Item" + "*"*11))
+        #print("Len(Cat)", len(Item))
+        print("*" * len("*" * 11 + "Item" + "*" * 11))
+
+
 
 
     with Chrome("C:\selenium\chromedriver.exe") as driver:
@@ -62,4 +75,5 @@ if __name__ == "__main__":
         mango = Mango(driver)
 
         #_categories(mango=mango)
-        _category(mango=mango)
+        #_category(mango=mango)
+        _item(mango=mango)
