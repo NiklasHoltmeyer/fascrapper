@@ -1,0 +1,6 @@
+requests~=2.25.1
+selenium~=3.141.0
+tinydb~=4.5.1
+tqdm~=4.49.0
+beautifulsoup4~=4.9.3
+setuptools~=54.2.0

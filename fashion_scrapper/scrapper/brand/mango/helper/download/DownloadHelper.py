@@ -1,33 +1,12 @@
-from urllib.parse import urlparse
-
-import util
-from default_logger.defaultLogger import defaultLogger
-from scrapper.brand.mango.Mango import Mango
-from util.web.dynamic import *
+from datetime import datetime
 from pathlib import Path
 
 from tinydb import where
-
-from util.io import Json_DB
-
-from datetime import datetime
 from tqdm.auto import tqdm
 
-from scrapper.brand.mango.webelements._WebElements import _Mango_Selectors
-
-class MangoPaths:
-    def __init__(self, BASE_PATH):
-        self.BASE_PATH = BASE_PATH
-
-    def relative_image_path(self, URL, create=True):  # falscher name -> eig. relative cat path
-        category = URL.replace(_Mango_Selectors.URLS.BASE_FULL, "")
-        p = Path(self.BASE_PATH, category)
-        if create:
-            p.mkdir(parents=True, exist_ok=True)
-        return p
-
-    def relative_img_real_path(self, image_url):
-        return urlparse(image_url).path.split("/fotos")[-1]
+from scrapper import util
+from scrapper.brand.mango.helper.download.MangoPaths import MangoPaths
+from scrapper.util.io import Json_DB
 
 
 class DownloadHelper:
@@ -49,8 +28,9 @@ class DownloadHelper:
         def dl_job(image):
             path = Path(self.BASE_PATH + image["path"])
             path.parent.mkdir(parents=True, exist_ok=True)
+
             try:
-                util.web.static.download_file(url=image["src"], path=path)
+                util.web.static.download_file(url=image["src"], path=path, exist_ok=True)
                 return 0
             except:
                 return 1
@@ -105,27 +85,5 @@ class DownloadHelper:
         _clean_info = lambda d: {"url": d["url"], "name": d["alt"]}
         return [_clean_info(x) for x in category_items]
 
-if __name__ == "__main__":
-
-
-    SCRAP_PATH = r"F:\workspace\fascrapper\scrap_results\mango"
-    Path(SCRAP_PATH).mkdir(parents=True, exist_ok=True)
-
-    logger = defaultLogger("Mango")
-    driver = driver()
-    mango = Mango(driver=driver, logger=logger)
-
-    category_url = "https://shop.mango.com/de/herren/polo-shirts_c20667557"
-
-    dl_settings = {
-        "visited_db": Json_DB(SCRAP_PATH, "visited.json"),
-        "logger": logger,
-        "mango": mango,
-        "BASE_PATH": r"F:\workspace\fascrapper\scrap_results\mango"
-    }
-    dl_helper = DownloadHelper(**dl_settings)
-
-    print(dl_helper.download_images(category_url))
-    driver.close()
 
 

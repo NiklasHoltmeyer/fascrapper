@@ -14,7 +14,12 @@ def find_first_parent_href(element, depth=0, max_depth=None):
 
     return find_first_parent_href(element, depth=depth + 1)
 
-def download_file(url, path):
+def download_file(url, path, exist_ok = False):
+    if path.exists():
+        if exist_ok:
+            return
+        raise Exception(f"{path} already exists!")
+
     response = requests.get(url)
     if not response.ok:
         raise Exception(f"Request failed. Status_Code: {response.status_code}")

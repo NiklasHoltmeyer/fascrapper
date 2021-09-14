@@ -2,8 +2,8 @@ from time import sleep
 from urllib.parse import urlparse
 
 from default_logger.defaultLogger import defaultLogger
-from scrapper.brand.mango.webelements._WebElements import _WebElements, _Mango_Selectors
-from util.web.static import find_first_parent_href
+from scrapper.brand.mango.webelements.WebElements import WebElements
+from scrapper.util.web.static import find_first_parent_href
 
 
 class Mango:
@@ -11,13 +11,20 @@ class Mango:
         self.driver = driver
         self.logger = logger if logger else defaultLogger("Mongo")
 
-        self.elements = _WebElements(driver, self.logger)
+        self.elements = WebElements(driver, self.logger)
 
-    def list_categories(self, url):
+    def list_categories(self, url, retries=2):
         categories = [x["href"] for x in self.elements.categories.list_categories(url)]
         distinct_links = list(dict.fromkeys(sorted(categories)))
         _filter_top_level_categories = lambda x: len(x.split("/")) > 5
-        return [x for x in distinct_links if _filter_top_level_categories(x)]
+        categories = [x for x in distinct_links if _filter_top_level_categories(x)]
+
+        if len(categories) == 0 and retries > 0:
+            sleep(0.5)
+            return self.list_categories(url, (retries - 1))
+
+        return categories
+
 
     def list_category(self, url, retries=2):
         def parse_preview_images(preview_img):
