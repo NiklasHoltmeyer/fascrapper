@@ -38,7 +38,7 @@ def driver(path = "C:\selenium\chromedriver.exe"):
     selenium_logger.setLevel(logging.WARNING)
 
     chrome_options = selenium.webdriver.ChromeOptions()
-    # chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     # chrome_options.add_argument('--incognito')
     chrome_options.add_argument('log-level=3')

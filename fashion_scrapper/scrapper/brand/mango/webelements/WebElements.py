@@ -1,3 +1,5 @@
+from time import sleep
+
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -22,20 +24,27 @@ class WebElements:
         self.article = Mango_Article_Elements(self)
 
     def header(self):
-        header = self.driver.find_elements_by_css_selector("header")
-        assert len(header) != 0
-        headerHTML = header[0].get_attribute("outerHTML")
-        doc = BeautifulSoup(headerHTML, "html.parser")
+        def _load_header():
+            header = self.driver.find_elements_by_css_selector("header")
+            assert len(header) != 0
+            headerHTML = header[0].get_attribute("outerHTML")
+            doc = BeautifulSoup(headerHTML, "html.parser")
+            return doc
 
-        return doc
+        last_len = -1
+        while True:  # -> The Content of the Header loads async -> wait for Header-Length to be "fully" loaded
+            doc = _load_header()
+            if last_len == len(doc):
+                return doc
+            else:
+                last_len = len(doc)
+                sleep(0.5)
 
     def accept_cookies(self):
         wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
-
 
 #        wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
 #        try:
 #            self.driver.find_element_by_id(self.selectors.ID.ACCEPT_COOKIES).click()  # Cookies
 #        except Exception as e:
 #            raise e
-

@@ -11,3 +11,15 @@ def Json_DB(*paths):
     serialization.register_serializer(DateTimeSerializer(), 'TinyDate')
 
     return TinyDB(Path(*paths), storage=serialization)
+
+
+def list_json_dbs(path, BLACKLIST=["visited.json"]):
+    _blacklist_filter = lambda x: len([bl for bl in BLACKLIST if bl in str(x)]) == 0
+    return [x for x in Path(path).rglob('*.json') if _blacklist_filter(x)]
+
+
+def walk_entries(path):
+    for db_path in list_json_dbs(path):
+        db = Json_DB(db_path)
+        for entry in db.all():
+            yield entry

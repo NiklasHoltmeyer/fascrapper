@@ -19,10 +19,11 @@ class DownloadHelper:
         self.mango_path = MangoPaths(self.BASE_PATH)
 
     def download_images(self, category_url, IGNORE_CATEGORY_EXISTING=False):
-        category_path = self.mango_path.relative_image_path(category_url)
-        category_database = Json_DB(category_path, "data.json")
+        category_as_filename = self.mango_path.category_from_url(category_url).replace("/", "_")
+        #category_database = Json_DB(category_path, "data.json")
+        category_database = Json_DB(self.BASE_PATH, f"{category_as_filename}.json")
 
-        parse_images = self.parse_image_urls(category_url, category_path, category_database,
+        parse_images = self.parse_image_urls(category_url, category_database,
                                              IGNORE_CATEGORY_EXISTING=IGNORE_CATEGORY_EXISTING)
 
         def dl_job(image):
@@ -41,11 +42,13 @@ class DownloadHelper:
         parse_images["num_exceptions"] = sum([sum(x) for x in dl_jobs_results])
         return parse_images
 
-    def parse_image_urls(self, category_url, category_path, category_database, IGNORE_CATEGORY_EXISTING=False):
+    def parse_image_urls(self, category_url, category_database, IGNORE_CATEGORY_EXISTING=False):
+        category_as_filename = self.mango_path.category_from_url(category_url).replace("/", "_")
+
         if not IGNORE_CATEGORY_EXISTING and len(self.visited_db.search(where('url') == category_url)) != 0:
             self.logger.debug(f"Category Vistied: {category_url}")
             return {
-                "db_path": f"{category_path}/data.json"
+                "db_path": f"{self.BASE_PATH}/{category_as_filename}.json"
             }
 
         category_items = self._list_category_clean(category_url)
@@ -68,14 +71,14 @@ class DownloadHelper:
                 self.logger.error(e)
 
         if len(exceptions) > 0:
-            failed_db = Json_DB(category_path, "failed.json")
+            failed_db = Json_DB(self.BASE_PATH, f"{category_as_filename}_failed.json") #Json_DB(category_path, "failed.json")
             [failed_db.insert(x) for x in exceptions]
 
             self.logger.debug("Error")
 
         return {
             "exceptions": exceptions,
-            "db_path": f"{category_path}/data.json"
+            "db_path": f"{self.BASE_PATH}/{category_as_filename}.json"
         }
 
     def _list_category_clean(self, category_url):
