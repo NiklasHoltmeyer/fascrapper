@@ -1,3 +1,8 @@
+from pathlib import Path
+
+import requests
+
+
 def find_first_parent_href(element, depth=0, max_depth=None):
     if max_depth and depth >= max_depth:
         raise Exception("not implemented")
@@ -8,3 +13,13 @@ def find_first_parent_href(element, depth=0, max_depth=None):
         return element["href"]
 
     return find_first_parent_href(element, depth=depth + 1)
+
+def download_file(url, path):
+    response = requests.get(url)
+    if not response.ok:
+        raise Exception(f"Request failed. Status_Code: {response.status_code}")
+
+    with open(path, 'wb') as f:
+        f.write(response.content)
+
+

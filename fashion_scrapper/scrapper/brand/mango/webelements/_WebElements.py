@@ -2,7 +2,6 @@ import time
 
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 from util.web.dynamic import wait, scroll_end_of_page
@@ -31,10 +30,11 @@ class _WebElements:
 
     def accept_cookies(self):
         wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
-        try:
-            self.driver.find_element_by_id(self.selectors.ID.ACCEPT_COOKIES).click()  # Cookies
-        except Exception as e:
-            raise e
+#        wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
+#        try:
+#            self.driver.find_element_by_id(self.selectors.ID.ACCEPT_COOKIES).click()  # Cookies
+#        except Exception as e:
+#            raise e
 
 
 class _Mango_Selectors:
@@ -46,6 +46,7 @@ class _Mango_Selectors:
     class URLS:
         BASE = "https://shop.mango.com"
         LANGUAGE = "de"
+        BASE_FULL = f"{BASE}/{LANGUAGE}/"
 
 
 
@@ -84,7 +85,7 @@ class _Mango_Category_Elements:
                 time.sleep(timeout)
 
     def list_images(self, url):
-        self.logger.debug("Loading: ", url)
+        self.logger.debug(f"Loading: {url}")
 
         html = self.load_html(url)
 
@@ -106,7 +107,7 @@ class _Mango_Categories_Elements:
         self.logger = logger
 
     def load_sub_categories(self, url):
-        self.logger.debug("Loading Sub Category", url)
+        self.logger.debug(f"Loading Sub Category {url}")
         self.driver.get(url)
         header = self.elements.header()
         hrefs = header.find_all(href=True)

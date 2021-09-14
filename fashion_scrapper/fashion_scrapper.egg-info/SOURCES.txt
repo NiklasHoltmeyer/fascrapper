@@ -9,9 +9,11 @@ scrapper/__init__.py
 scrapper/brand/__init__.py
 scrapper/brand/mango/Mango.py
 scrapper/brand/mango/__init__.py
+scrapper/brand/mango/helper.py
 scrapper/brand/mango/webelements/_WebElements.py
 scrapper/brand/mango/webelements/__init__.py
 util/__init__.py
+util/io.py
 util/web/__init__.py
 util/web/dynamic.py
 util/web/static.py

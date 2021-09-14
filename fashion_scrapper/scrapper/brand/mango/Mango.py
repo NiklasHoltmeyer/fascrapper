@@ -1,3 +1,4 @@
+from time import sleep
 from urllib.parse import urlparse
 
 from default_logger.defaultLogger import defaultLogger
@@ -13,9 +14,12 @@ class Mango:
         self.elements = _WebElements(driver, self.logger)
 
     def list_categories(self, url):
-        return self.elements.categories.list_categories(url)
+        categories = [x["href"] for x in self.elements.categories.list_categories(url)]
+        distinct_links = list(dict.fromkeys(sorted(categories)))
+        _filter_top_level_categories = lambda x: len(x.split("/")) > 5
+        return [x for x in distinct_links if _filter_top_level_categories(x)]
 
-    def list_category(self, url):
+    def list_category(self, url, retries=2):
         def parse_preview_images(preview_img):
             img_info = preview_img.attrs
             article_url = find_first_parent_href(preview_img)
@@ -30,6 +34,10 @@ class Mango:
 
         articles = [parse_preview_images(x) for x in article_imgs]
         articles = list({x['url']: x for x in articles}.values())  # remove duplications (based on url)
+
+        if len(articles) == 0 and retries > 0:
+            sleep(0.5)
+            return self.list_category(url, (retries - 1))
 
         return articles
 
