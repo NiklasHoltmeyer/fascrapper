@@ -41,7 +41,10 @@ class WebElements:
                 sleep(0.5)
 
     def accept_cookies(self):
-        wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
+        try:
+            wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
+        except:
+            pass
 
 #        wait(self.driver, EC.element_to_be_clickable((By.ID, self.selectors.ID.CHANGE_VIEW_COLUMNS))).click()
 #        try:

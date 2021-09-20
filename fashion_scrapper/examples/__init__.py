@@ -3,7 +3,7 @@ from pathlib import Path
 from scrapper.brand.mango.helper.download.MangoPaths import MangoPaths
 from scrapper.util.io import Json_DB
 
-SCRAP_PATH = r"F:\workspace\fascrapper\scrap_results\mango"
+SCRAP_PATH = r"F:\workspace\fascrapper\scrap_results\mango\shirt"
 
 def get_databases(SCRAP_PATH):
     for db in Path(SCRAP_PATH).rglob('*data.json'):
@@ -21,5 +21,6 @@ for db in get_databases(SCRAP_PATH):
     #print("/".join(url.split("/")))
 
 
+Asos()
 
 

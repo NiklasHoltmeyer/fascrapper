@@ -96,6 +96,10 @@ def build_triplets(path):
     return data
 
 if __name__ == "__main__":
-    triplets_df = as_df(build_triplets(r"F:\workspace\fascrapper\scrap_results\mango"))
-    print("Columns", triplets_df.columns)
+    triplets_df = as_df(build_triplets(r"F:\workspace\fascrapper\scrap_results\mango\shirt"))
+
     print(triplets_df.head(3))
+
+    print("Columns", triplets_df.columns)
+    print("Len", len(triplets_df))
+

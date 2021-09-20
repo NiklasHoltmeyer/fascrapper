@@ -16,6 +16,12 @@ class MangoPaths:
         return p
 
     def relative_img_real_path(self, image_url):
+        """
+        "https://st.mngbcn.com/rcs/pics/static/T1/fotos/outfit/S20/17060293_01-99999999_01.jpg?ts=1620389591187&imwidth=630&imdensity=1"
+        -> "'/outfit/S20/17060293_01-99999999_01.jpg'"
+        :param image_url: Full Image-URL
+        :return: relative Path to File
+        """
         return urlparse(image_url).path.split("/fotos")[-1]
 
     @staticmethod
