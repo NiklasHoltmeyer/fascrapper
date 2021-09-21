@@ -18,11 +18,3 @@ def filterd_entries(entries, shuffle_images=True):
             yield {"id": _id, "images": images_filterd}
 
 
-def validate_triplets(data):
-    """
-    Validate Triplets (Anchor = Positive != Negative)
-    """
-    for d in data:
-        a_id, p_id, n_id = d["anchor"]["id"], d["positive"]["id"], d["negative"]["id"]
-        if a_id != p_id or a_id == n_id:
-            raise Exception(f"Invalid Entry: {d}")

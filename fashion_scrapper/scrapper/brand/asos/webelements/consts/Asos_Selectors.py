@@ -7,3 +7,5 @@ class Asos_Selectors:
         BASE = "https://www.asos.com/"
         BASE_URL_MEN = "https://www.asos.com/men/"
         BASE_URL_WOMAN = "https://www.asos.com/women/"
+
+        BASE_IMAGE_URL = "https://images.asos-media.com/"

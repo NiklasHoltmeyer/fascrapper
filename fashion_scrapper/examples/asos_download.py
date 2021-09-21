@@ -1,28 +1,15 @@
-from pathlib import Path
-from bs4 import BeautifulSoup
+import pickle
+from multiprocessing import Pool, freeze_support
 
+import numpy as np
+from tqdm.auto import tqdm
+
+from default_logger.defaultLogger import defaultLogger
+from scrapper.brand.asos.Asos import Asos
 from scrapper.brand.asos.helper.download.DownloadHelper import DownloadHelper
 from scrapper.util.io import Json_DB
-from scrapper.util.web.static import find_first_parent_href
-from scrapper.util.list import flatten, distinct, distinct_list_of_dicts
-from scrapper.util.web.dynamic import driver as ddriver
-from scrapper.brand.asos.webelements.views.Asos_Categories_Elements import Asos_Categories_Elements
-from scrapper.brand.asos.webelements.views.Asos_Category_Elements import Asos_Category_Elements
-from scrapper.brand.asos.webelements.views.Asos_item_Elements import Asos_Article_Elements
-from default_logger.defaultLogger import defaultLogger
-
-from random import shuffle
-from tqdm.auto import tqdm
-from scrapper.util.web.dynamic import driver as d_driver
-
-from time import sleep
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from scrapper.util.web.dynamic import wait, scroll_end_of_page
-from scrapper.brand.asos.Asos import Asos
 from scrapper.util.list import includes_excludes_filter, flatten
-from multiprocessing import Pool, freeze_support
+from scrapper.util.web.dynamic import driver as d_driver
 
 CATEGORIES = [
     {"name": "schuhe", "includes": ["shoe"], "excludes": []},
@@ -97,17 +84,27 @@ def prepare_categories(category_jobs):
 
 if __name__ == "__main__":
     freeze_support()
-    #category_jobs = flatten_categories(filter_categories())
-    #category_jobs = category_jobs[:2]
+    category_jobs = flatten_categories(filter_categories())
     BASE_PATH = r"F:\workspace\fascrapper\scrap_results\asos"
     dl_settings = {
-        "category_path": BASE_PATH,
-        "visited_db": Json_DB(BASE_PATH, "visited.json")
+        "base_path": BASE_PATH,
+        "visited_db": Json_DB(BASE_PATH, "visited.json"),
+        "logger": logger,
+        "threads": 8
     }
     dl_helper = DownloadHelper(**dl_settings)
-    category_jobs = [('schuhe', 'https://www.asos.com/women/new-in/new-in-shoes/cat/?cid=6992&nlid=ww|new+in|new+products|shoes'), ('schuhe', 'https://www.asos.com/women/new-in/new-in-shoes/cat/?cid=6992&nlid=ww|shoes|shop+by+product|new+in')]
+    save_frequency = 0.1
+    chunk_size = max(0, int(len(category_jobs) * save_frequency))
+    category_jobs_chunked = np.array_split(category_jobs, chunk_size)
+    exceptions = []
+    for job in tqdm(category_jobs_chunked, desc="OUTER"):
+        exceptions.append(dl_helper.prepare_categories(job))
 
-    dl_helper.prepare_categories(category_jobs)
+    exceptions = np.array(exceptions)
+
+    with open(r"F:\workspace\fascrapper\scrap_results\asos\exceptions.pkl") as db_file:
+        pickle.dump(obj=exceptions, file=db_file)
+
 
 
     #categories_data = flatten(prepare_categories())
