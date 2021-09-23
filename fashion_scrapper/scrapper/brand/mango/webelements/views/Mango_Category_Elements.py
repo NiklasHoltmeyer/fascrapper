@@ -1,6 +1,7 @@
 import time
 
 from bs4 import BeautifulSoup
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -18,7 +19,10 @@ class Mango_Category_Elements:
     def load_html(self, url, timeout=1.5):
         self.driver.get(url)
 
-        wait(self.driver, EC.presence_of_element_located((By.ID, 'app')))
+        try:
+            wait(self.driver, EC.presence_of_element_located((By.ID, 'app')))
+        except TimeoutException as e:
+            raise Exception({"exception" : e, "function":"mango_category_elements.load_html", "url": url})
 
         self.elements.accept_cookies()
 

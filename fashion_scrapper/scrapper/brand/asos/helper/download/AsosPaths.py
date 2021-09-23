@@ -29,6 +29,11 @@ class AsosPaths:
             p.parent.mkdir(parents=True, exist_ok=True)
         return p
 
+    def list_all_images(self):
+        pics_base = Path(self.BASE_PATH, "pics")
+        pics = filter(lambda x: x.is_file(), pics_base.rglob("*"))
+        return list(pics)
+
     @staticmethod
     def category_from_url(URL):
         _url = URL.replace(Asos_Selectors.URLS.BASE, "")

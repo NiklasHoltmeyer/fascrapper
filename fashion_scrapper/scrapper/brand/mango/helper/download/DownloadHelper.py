@@ -66,17 +66,12 @@ class DownloadHelper:
                 info["url"] = item["url"]
                 category_database.insert(info)
             except Exception as e:
-                exceptions.append({"item": item, "exception": e})
+                exceptions.append({"item": item, "exception": e, "function": "parse_image_urls"})
                 self.logger.error(e)
 
         if len(exceptions) > 0:
             failed_db = Json_DB(self.category_path, f"{category_as_filename}_failed.json") #Json_DB(category_path, "failed.json")
-            try:
-                [failed_db.insert(x) for x in exceptions]
-            except:
-                [{"msg": failed_db.insert(str(x))} for x in exceptions]
-
-            self.logger.debug("Error")
+            failed_db.insert_multiple(exceptions)
 
         return {
             "exceptions": exceptions,
