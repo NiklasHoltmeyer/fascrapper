@@ -1,10 +1,10 @@
 from scrapper.brand.asos.webelements.consts.Asos_Selectors import Asos_Selectors
+from scrapper.brand.asos.webelements.views.Asos_Article_Elements import Asos_Article_Elements
 from scrapper.brand.asos.webelements.views.Asos_Categories_Elements import Asos_Categories_Elements
 from scrapper.brand.asos.webelements.views.Asos_Category_Elements import Asos_Category_Elements
-from scrapper.brand.asos.webelements.views.Asos_item_Elements import Asos_Article_Elements
 
 
-class WebElements:
+class AsosWebElements:
     """ HTML Elements """
 
     def __init__(self, driver, logger):

@@ -23,7 +23,11 @@ class Asos_Categories_Elements:
 
     def list_categories(self):
         self.driver.get(Asos_Selectors.URLS.BASE_URL_MEN)
-        wait(self.driver, EC.presence_of_element_located((By.ID, 'chrome-sticky-header')))
+        try:
+            wait(self.driver, EC.presence_of_element_located((By.ID, 'chrome-sticky-header')))
+        except Exception as e:
+            self.debugger.error("Asos_Categories_Elements::list_categories")
+            raise Exception(e)
         full_html = self.driver.page_source
         doc = BeautifulSoup(full_html, 'html.parser')
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
-from scrapper.brand.mango.webelements.WebElements import Mango_Selectors
+from scrapper.brand.mango.webelements.MangoWebElements import Mango_Selectors
 
 
 class MangoPaths:

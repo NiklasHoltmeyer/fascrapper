@@ -5,12 +5,12 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import numpy as np
-from PIL.Image import Image
+from PIL import Image
 from tinydb import where
 from tqdm.auto import tqdm
 from default_logger.defaultLogger import defaultLogger
-from scrapper.brand.asos.Asos import Asos
-from scrapper.brand.asos.helper.download.AsosPaths import AsosPaths
+from scrapper.brand.hm.HM import HM
+from scrapper.brand.hm.helper.download.HMPaths import HMPaths
 from scrapper.util.io import Json_DB, time_logger
 from scrapper.util.list import flatten, distinct_list_of_dicts
 from scrapper.util.web.dynamic import driver as d_driver
@@ -18,13 +18,13 @@ from scrapper.util.web.static import download_file
 import pandas as pd
 
 
-class DownloadHelper:
+class HM_DownloadHelper:
     def __init__(self, **args):
         self.visited_db = args.get("visited_db")
         self.logger = args.get("logger")
         self.base_path = args.get("base_path")
         self.brand_api = args.get("brand_api")
-        self.brand_path = AsosPaths(self.base_path)
+        self.brand_path = HMPaths(self.base_path)
         self.threads = args.get("threads", os.cpu_count())
 
     @staticmethod
@@ -32,12 +32,14 @@ class DownloadHelper:
         category_name, category_url = cat_data
         try:
             with d_driver(headless=False) as driver:
-                asos = Asos(driver=driver, logger=None)
-                items = asos.list_category(category_url, PAGINATE=PAGINATE)
+                hm = HM(driver=driver, logger=None)
+                items = hm.list_category(category_url, PAGINATE=PAGINATE)
+
                 return [{"success": True, "name": category_name, "cat_url": category_url, "items": [x],
-                         "cat_path": AsosPaths.category_from_url(category_url).replace("/", "_")} for x in items]
+                         "cat_path": HMPaths.category_from_url(category_url).replace("/", "_")} for x in items]
         except Exception as e:
-            return [{"success": False, "name": category_name, "url": category_url, "exception": str(e)}]
+            return [{"success": False, "name": category_name, "url": category_url, "exception": str(e),
+                     "exception_func": "dl_helper::load_category"}]
 
     #    @time_logger(name="Prepare Categories", header="DL-Helper", padding_length=50)
 
@@ -48,8 +50,8 @@ class DownloadHelper:
         exceptions = flatten(list(jobs_iter))
         return exceptions
 
+    @time_logger(name="Prepare prepare_sub_categories", header="DL-Helper", padding_length=50)
     def prepare_sub_categories(self, sub_category_jobs, IGNORE_CATEGORY_EXISTING=False):
-
         def filter_category_downloaded(job, force=IGNORE_CATEGORY_EXISTING):
             return force or len(self.visited_db.search(where('url') == job[1])) == 0
 
@@ -62,7 +64,7 @@ class DownloadHelper:
                 return []
             with Pool(_threads) as p:
                 r = list(
-                    tqdm(p.imap(DownloadHelper.load_category, jobs), desc=f"Prepare Categories - {_threads} Threads",
+                    tqdm(p.imap(HM_DownloadHelper.load_category, jobs), desc=f"Prepare Categories - {_threads} Threads",
                          total=len(jobs), mininterval=30))
                 return flatten(r)
 
@@ -87,7 +89,7 @@ class DownloadHelper:
                 if result["success"]:
                     grouped_results[result["cat_path"]].append(result)
                 else:
-                    exceptions.append(result)
+                    exceptions.append({**result, "func": "group_results_by_category"})
             return grouped_results, exceptions
 
         results_grouped, exceptions = group_results_by_category(results)
@@ -103,7 +105,7 @@ class DownloadHelper:
                 with Json_DB(db_path) as db:
                     db_all = db.all()
                     clean_item = lambda item: {'id': item["id"], 'url': item["url"]}
-                    items = filter(lambda item: not DownloadHelper.filter_entries_by_id(db_all, item["id"]), entries)
+                    items = filter(lambda item: not HM_DownloadHelper.filter_entries_by_id(db_all, item["id"]), entries)
                     items = list(map(clean_item, items))
                     db.insert_multiple(items)
 
@@ -112,13 +114,14 @@ class DownloadHelper:
                 cat_url = entries[0]["cat_url"]
                 if filter_category_downloaded(cat_url, False):
                     self.visited_db.insert({'url': cat_url, 'last_visit': datetime.now()})
+            self.visited_db.storage.flush()
 
         save_visited_categories(results_grouped)
         return exceptions
 
     @staticmethod
     def filter_entries_by_id(db_all, id):  # <- in memory
-        return DownloadHelper.find_first(db_all, "id", id)
+        return HM_DownloadHelper.find_first(db_all, "id", id)
 
     @staticmethod
     def find_first(db_all, key, value):
@@ -137,9 +140,10 @@ class DownloadHelper:
 
         def download_new(visited_db_path, cat_db):
             with Json_DB(visited_db_path) as db:
-                db_all = db.all()
-                new_entries = [entry for entry in db_all if
-                               not DownloadHelper.filter_entries_by_id(db_all, entry["id"])]
+                existing_items = cat_db.all()
+
+                new_entries = [entry for entry in db.all() if
+                               not HM_DownloadHelper.filter_entries_by_id(existing_items, entry["id"])]
 
                 if len(new_entries) == 0:
                     return
@@ -148,7 +152,7 @@ class DownloadHelper:
 
                 new_entries_splitted = np.array_split(new_entries, _threads)
                 with Pool(_threads) as p:
-                    entries = flatten(list(tqdm(p.imap(DownloadHelper._download_entries, new_entries_splitted),
+                    entries = flatten(list(tqdm(p.imap(HM_DownloadHelper._download_entries, new_entries_splitted),
                                                 desc=f"Prepare Articles - {_threads} Threads",
                                                 total=len(new_entries_splitted))))
                     cat_db.insert_multiple(entries)
@@ -177,15 +181,15 @@ class DownloadHelper:
                 for entry in entries:
                     images = entry["images"]
                     for img in images:
-                        assert "https://images.asos-media.com/" in img["url"], img
-                        assert len(img["url"].split("/")) == 6, img
                         yield img["url"]
 
         def create_download_jobs(image_urls):
+            clean_url = lambda url: url.replace("https:https://", "https://")
+
             jobs = [{"url": img_url, "path": self.brand_path.relative_image_path_from_url(img_url)}
                     for img_url in tqdm(image_urls, desc="Create Dst-Paths")]
             jobs_d = distinct_list_of_dicts(jobs, key="url")
-            return [(x["url"], x["path"]) for x in jobs_d]
+            return [(clean_url(x["url"]), x["path"]) for x in jobs_d]
 
         img_urls = list(flatten_image_urls())
         download_jobs = create_download_jobs(img_urls)
@@ -193,7 +197,7 @@ class DownloadHelper:
 
         with Pool(_threads) as p:
             return list(
-                tqdm(p.imap(DownloadHelper.download_image, download_jobs), desc=f"Download Images - {_threads} Threads",
+                tqdm(p.imap(HM_DownloadHelper.download_image, download_jobs), desc=f"Download Images - {_threads} Threads",
                      total=len(download_jobs)))
 
     def describe_results(self):
@@ -225,33 +229,28 @@ class DownloadHelper:
             # new_img = lambda path: not DownloadHelper.find_first(all_entries, key="path", value=path)
             # imgs_new = list(filter(new_img, tqdm(imgs, desc="Filter IMG in Info-DB")))
 
-            r = list(tqdm(p.imap(DownloadHelper.load_image_data, imgs), desc=f"Load IMG Info - {self.threads} Threads",
+            r = list(tqdm(p.imap(HM_DownloadHelper.load_image_data, imgs), desc=f"Load IMG Info - {self.threads} Threads",
                           total=len(imgs)))
+
             img_infos, errors = collect_result(r)
 
             db.insert_multiple(img_infos)
 
-        df = pd.DataFrame(img_infos)
+            def group_by_format_count(df):
+                countdict = defaultdict(lambda: 0)
+                for format in df["format"]:
+                    countdict[format] += 1
+                return countdict.items()
 
-        def group_by_format_count(df):
-            countdict = defaultdict(lambda: 0)
-            for format in df["format"]:
-                countdict[format] += 1
-            return countdict.items()
+            df = pd.DataFrame(img_infos)
+            format = group_by_format_count(df)
 
-        try:
             return {
                 "db_path": img_info_db_path,
                 "dataframe": df,
-                "image_formats": group_by_format_count(df),
+                "image_formats": format,
                 "describe": df.describe(),
                 "errors": errors
-            }
-        except Exception as e:
-            return {
-                "dataframe": df,
-                "exception": e,
-                "img_infos": img_infos
             }
 
     @staticmethod
@@ -273,11 +272,11 @@ class DownloadHelper:
             return (path, None)
 
     @staticmethod
-    def _download_entry(entry, asos):
+    def _download_entry(entry, hm):
         try:
-            return {**entry, **asos.show(entry["url"])}
+            return {**entry, **hm.show(entry["url"])}
         except Exception as e:
-            logger = defaultLogger("asos")
+            logger = defaultLogger("hm")
             logger.error("Prop-Unknown-Container " + entry["url"])
             # print("Prop-Unknown-Container", entry["url"])
             # raise e
@@ -285,6 +284,6 @@ class DownloadHelper:
     @staticmethod
     def _download_entries(entries):
         with d_driver(headless=False) as driver:
-            asos = Asos(driver=driver)
-            d = [DownloadHelper._download_entry(entry, asos) for entry in entries]
+            hm = HM(driver=driver)
+            d = [HM_DownloadHelper._download_entry(entry, hm) for entry in entries]
             return [x for x in d if x]

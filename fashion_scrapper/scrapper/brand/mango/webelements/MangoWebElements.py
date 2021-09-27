@@ -11,7 +11,7 @@ from scrapper.brand.mango.webelements.consts.Mango_Selectors import Mango_Select
 from scrapper.util.web.dynamic import wait
 
 
-class WebElements:
+class MangoWebElements:
     """ HTML Elements """
 
     def __init__(self, driver, logger):

@@ -69,7 +69,7 @@ class Asos_Category_Elements:
         all_as = list(self.driver.find_element_by_id("plp").find_elements_by_tag_name("a"))
         more_btn = [a for a in reversed(all_as) if "LOAD" in a.text]
 
-        if len(more_btn) > 1:
+        if len(more_btn) > 0:
             return more_btn[0]
 
         progress_bar = self._load_progress_bar()

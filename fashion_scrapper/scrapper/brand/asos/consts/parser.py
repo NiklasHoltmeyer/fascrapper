@@ -3,10 +3,10 @@ from default_logger.defaultLogger import defaultLogger
 
 
 BASE_PATH = r"F:\workspace\fascrapper\scrap_results\asos"
-THREADS = 16
+THREADS = 3
 PAGINATE = True
 IGNORE_EXISTING = False
-unknown_category_allowed = False
+unknown_category_allowed = True
 save_frequency = 1.0
 
 logger = defaultLogger("asos")
