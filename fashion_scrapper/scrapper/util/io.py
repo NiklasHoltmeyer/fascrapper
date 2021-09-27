@@ -26,11 +26,12 @@ def list_json_dbs(path, BLACKLIST=["visited.json"]):
     return [x for x in Path(path).rglob('*.json') if _blacklist_filter(x)]
 
 
-def walk_entries(path):
-    for db_path in list_json_dbs(path):
-        db = Json_DB(db_path)
-        for entry in db.all():
-            yield entry
+def walk_entries(path, BLACKLIST=None):
+    db_iter = list_json_dbs(path, BLACKLIST=BLACKLIST) if BLACKLIST else list_json_dbs(path)
+    for db_path in db_iter:
+        with Json_DB(db_path) as db:
+            for entry in db.all():
+                yield entry
 
 
 def time_logger(**kwargs):

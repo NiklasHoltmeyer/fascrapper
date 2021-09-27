@@ -198,7 +198,26 @@ class Asos_DownloadHelper:
                 tqdm(p.imap(Asos_DownloadHelper.download_image, download_jobs), desc=f"Download Images - {_threads} Threads",
                      total=len(download_jobs)))
 
-    def describe_results(self):
+    def describe_results(self, FORCE):
+        items_db = Path(self.base_path, "items.csv")
+        self.logger.debug(f"items_db: {items_db}")
+        if FORCE and items_db.exists():
+            items_db.unlink()
+
+        if items_db.exists():
+            return pd.read_csv(items_db)
+
+        entries_db_path = self.brand_path.get_entries_db_base_path()
+        print(entries_db_path)
+        self.logger.debug(f"items_db: {items_db}")
+
+
+
+
+
+
+
+    def describe_results_alt(self):
         @time_logger(name="List all Images", header="List all Images", padding_length=50)
         def load_imgs():
             pics_base = Path(self.base_path, "pics")
@@ -285,3 +304,5 @@ class Asos_DownloadHelper:
             asos = Asos(driver=driver)
             d = [Asos_DownloadHelper._download_entry(entry, asos) for entry in entries]
             return [x for x in d if x]
+
+

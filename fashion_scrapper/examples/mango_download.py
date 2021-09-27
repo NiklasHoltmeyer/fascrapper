@@ -3,29 +3,13 @@ from pathlib import Path
 
 from selenium.common.exceptions import TimeoutException
 
-from default_logger.defaultLogger import defaultLogger
 from scrapper.brand.mango.Mango import Mango
+from scrapper.brand.mango.consts.parser import *
 from scrapper.brand.mango.helper.download.DownloadHelper import DownloadHelper
 from scrapper.util.io import Json_DB
 from scrapper.util.list import includes_excludes_filter, flatten
 from scrapper.util.web.dynamic import driver as d_driver
 from tqdm.auto import tqdm
-
-BASE_PATH = r"F:\workspace\fascrapper\scrap_results\mango"
-CATEGORIES = [
-    {"name": "schuhe", "includes": ["sneaker", "schuhe"], "excludes": ["edits/sneakers"]},
-    {"name": "hose", "includes": ["short", "jeans", "rocke", "hose"], "excludes": []},
-    {"name": "shirt", "includes": ["shirt", "hemd", "blazer"], "excludes": []},
-    {"name": "pullover", "includes": ["pullover"], "excludes": []},
-    {"name": "jacke", "includes": ["jacke", "mantel"], "excludes": []},
-    {"name": "kleid", "includes": ["kleid"], "excludes": ["kleidung"]},
-    {"name": "anzug", "includes": ["anzug", "overalls"], "excludes": []}
-]
-
-THREADS = 8
-FORCE_RESCAN = True
-logger = defaultLogger("Mango")
-
 
 def download_category(category, mango, sub_categories):
     path = Path(BASE_PATH, category["name"])

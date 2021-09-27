@@ -48,7 +48,8 @@ class Asos:
         return self.elements.article.show(url)
 
 if __name__ == "__main__":
-    with driver(headless=False) as d:
-        asos = Asos(d)
-        category = asos.list_category("https://www.asos.com/women/shorts/cat/?cid=9263&nlid=ww|clothing|shop+by+product|shorts")
-        print(category)
+    #with driver(headless=False) as d:
+        #asos = Asos(d)
+        #category = asos.list_category("https://www.asos.com/women/shorts/cat/?cid=9263&nlid=ww|clothing|shop+by+product|shorts")
+        #print(category)
+    print(Asos(None).list_categories_groupey_by_name())

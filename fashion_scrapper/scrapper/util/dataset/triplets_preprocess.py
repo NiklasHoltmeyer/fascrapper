@@ -1,12 +1,18 @@
 from random import shuffle
 import numpy as np
 
+from scrapper.brand.asos.consts.parser import (CATEGORIES as ASOS_CATEGORIES, BASE_PATH as ASOS_BASE_PATH)
+from scrapper.brand.mango.consts.parser import (CATEGORIES as MANGO_CATEGORIES, BASE_PATH as MANGO_BASE_PATH)
 from scrapper.brand.asos.helper.database.dbhelper import list_dbs_by_category
 from scrapper.brand.asos.helper.download.AsosPaths import AsosPaths
 from scrapper.brand.mango.helper.database.filter import filterd_entries
 from scrapper.util.io import walk_entries, Json_DB
 from scrapper.util.list import flatten, idx_self_reference, distinct_list_of_dicts
 from scrapper.brand.asos.webelements.consts.Asos_Selectors import Asos_Selectors
+from scrapper.brand.hm.helper.download.HMPaths import HMPaths
+from scrapper.brand.hm.consts.parser import (CATEGORIES as HM_CATEGORIES, BASE_PATH as HM_BASE_PATH)
+from scrapper.brand.hm.helper.download.HMPaths import HMPaths
+from scrapper.brand.hm.webelements.consts.HM_Selectors import HM_Selectors
 import pandas as pd
 
 
@@ -112,38 +118,42 @@ def validate_triplets(data):
 
 
 if __name__ == "__main__":
-    def build_mango_anchors():
-        entries = walk_entries(r"F:\workspace\fascrapper\scrap_results\mango\shirt")
+    def list_mango_entries_by_cat(category_name):
+        entries = walk_entries(rf"{MANGO_BASE_PATH}\{category_name}")
         anchor_items = (list(filterd_entries(entries)))
         return anchor_items
 
-
-
-    def build_asos_anchors(category_name):
+    def list_asos_entries_by_cat(category_name):
         def clean_entry(entry):
             return {"id": entry["url"].replace(Asos_Selectors.URLS.BASE, ""),
                     "images": [{"path": brand_path.relative_image_path_from_url(img["url"]), "view": img["description"]}
                                for img in entry["images"]]}
-        CATEGORIES = [
-            {"name": "schuhe", "includes": ["shoe"], "excludes": []},
-            {"name": "hose", "includes": ["short", "jeans", "leggings", "trousers"], "excludes": []},
-            {"name": "shirt", "includes": ["shirt", "skirt", "blazer", "top"], "excludes": []},
-            {"name": "pullover", "includes": ["pullover", "cardigans"], "excludes": []},
-            {"name": "jacke", "includes": ["coat"], "excludes": []},
-            {"name": "kleid", "includes": ["dresses"], "excludes": ["kleidung"]},
-            {"name": "anzug", "includes": ["suit", "overalls"], "excludes": []}
-        ]
-        BASE_PATH = r"F:\workspace\fascrapper\scrap_results\asos"
-        brand_path = AsosPaths(BASE_PATH)
+
+        brand_path = AsosPaths(ASOS_BASE_PATH)
         entries_db_path = brand_path.get_entries_db_base_path()
-        entries = list_dbs_by_category(entries_db_path, CATEGORIES)
+        entries = list_dbs_by_category(entries_db_path, ASOS_CATEGORIES)
         entries_by_cat_distinct = distinct_list_of_dicts(flatten([Json_DB(x).all() for x in entries[category_name]]), key="url")
 
         anchor_items = list(map(clean_entry, entries_by_cat_distinct))
         return anchor_items
 
+    def list_hm_entries_by_cat(category_name):
+        def clean_entry(entry):
+            return {"id": entry["url"].replace(HM_Selectors.URLS.BASE, ""),
+                    "images": [{"path": brand_path.relative_image_path_from_url(img["url"]), "view": img["name"]}
+                               for img in entry["images"]]}
 
-    anchor_items = build_asos_anchors("hose")
+        brand_path = HMPaths(HM_BASE_PATH)
+        entries_db_path = brand_path.get_entries_db_base_path()
+        entries = list_dbs_by_category(entries_db_path, HM_CATEGORIES)
+        entries_by_cat_distinct = distinct_list_of_dicts(flatten([Json_DB(x).all() for x in entries[category_name]]),
+                                                         key="url")
+
+        anchor_items = list(map(clean_entry, entries_by_cat_distinct))
+        return anchor_items
+
+
+    anchor_items = list_asos_entries_by_cat("hose")
     triplets_df = as_df(build_triplets(anchor_items))
 
     print(triplets_df.head(3))
