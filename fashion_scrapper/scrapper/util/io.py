@@ -1,3 +1,5 @@
+import json
+import os
 from pathlib import Path
 
 from tinydb import TinyDB
@@ -6,11 +8,11 @@ from tinydb_serialization.serializers import DateTimeSerializer
 from tinydb.storages import JSONStorage
 from tinydb.middlewares import CachingMiddleware
 from default_logger.defaultLogger import defaultLogger
-
+from PIL import Image
 from functools import wraps
 import time
 from math import ceil
-
+import cv2
 
 def Json_DB(*paths):
     serializationMiddleware = SerializationMiddleware(JSONStorage)
@@ -73,3 +75,22 @@ def pad_str(msg, **kwargs):
 
     symbols = symbol * symbol_count
     return f"{symbols} {msg} {symbols}"
+
+
+def json_load(file_path):
+    with open(file_path, ) as f:
+        data = json.load(f)
+        return data
+
+def load_img(path):
+    image = cv2.imread(str(path))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return image
+
+def save_image(data, path):
+    return Image.fromarray(data).save(path)
+
+def list_dir_abs_path(path):
+    path = Path(path)
+    dirs = os.listdir(path)
+    return list(map(lambda x: path/x, dirs))

@@ -36,3 +36,6 @@ def idx_self_reference(indices):
         if c == idx:
             return True
     return False
+
+def filter_not_none(lst):
+    return filter(lambda x: x is not None, lst)
