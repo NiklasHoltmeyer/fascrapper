@@ -30,3 +30,5 @@ class DeepFashion2Labels:
                 11: 'long_sleeved_dress',
                 12: 'vest_dress',
                 13: 'sling_dress'}
+
+

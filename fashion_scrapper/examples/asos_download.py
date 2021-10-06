@@ -56,7 +56,7 @@ def download_images(dl_helper):
     print("Len Excp", len(exceptions))
 
 def describe_results(dl_helper):
-    results = dl_helper.describe_results()
+    results = dl_helper.describe_results(FORCE=True)
     for key, value in results.items():
         print(key)
         #print(max(len(key), len(value)) * "v")

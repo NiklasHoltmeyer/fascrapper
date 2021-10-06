@@ -9,11 +9,11 @@ from multiprocessing.dummy import freeze_support
 from multiprocessing import RLock
 tqdm.set_lock(RLock())
 
-images_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train/image')
-masks_path = Path(str(images_path.resolve()) + "_mask")
+images_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train/images')
+masks_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train/annotations')
 
-resized_img_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train_256/image')
-resized_msk_path = Path(str(resized_img_path.resolve()) + "_mask")
+resized_img_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train_256/images')
+resized_msk_path = Path(f'F:/workspace/datasets/DeepFashion2 Dataset/train_256/annotations')
 
 def create_job(src_path, dst_path):
     src_abs_path = list_dir_abs_path(src_path)
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     jobs = list(filter(filter_dst_not_exists, tqdm(jobs, "Filter DST::Exists", total=len(jobs))))
     threads = 8
     chunk_size = calc_chunksize(n_workers=threads, len_iterable=len(jobs))
-    print(jobs)
+
     r = thread_map(transform_image(transform), jobs, max_workers=threads, total=len(jobs),
                    chunksize=chunk_size, desc=f"Resize Images ({threads} Threads)")
 

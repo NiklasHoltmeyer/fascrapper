@@ -54,13 +54,13 @@ class DeepFashion2Preprocessor:
         return r_true, r_false
 
     def semantic_segmentation(self, coco_path, **kwargs):
-        img_mask_dir = Path(str(self.images_path.resolve()) + "_mask")
+        img_mask_dir = self.images_path.parent / "annotations"
         img_mask_dir.mkdir(parents=True, exist_ok=True)
 
         coco = COCO(coco_path)
 
         coco_images = list(coco.imgs.values())
-        mask_does_not_exist = lambda img: not (img_mask_dir / img["file_name"]).exists()
+        mask_does_not_exist = lambda img: not (img_mask_dir / img["file_name"].replace(".jpg", ".png")).exists()
         coco_images = filter(mask_does_not_exist, tqdm(coco_images, desc="Filter Mask::exists", total=len(coco_images)))
         coco_images = list(coco_images)
         len_iterable = len(coco_images)
@@ -164,14 +164,41 @@ def transform_w_bb(transformer):
 
 ############ Seg
 
-def save_image(data, path):
-    return Image.fromarray(data).save(path)
-    # cv2.imwrite(path, data)
+def get_color_map_list(num_classes):
+    ### SRC: https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.2/tools/gray2pseudo_color.py
+    """
+    Returns the color map for visualizing the segmentation mask,
+    which can support arbitrary number of classes.
+    Args:
+        num_classes (int): Number of classes.
+    Returns:
+        (list). The color map.
+    """
 
+    num_classes += 1
+    color_map = num_classes * [0, 0, 0]
+    for i in range(0, num_classes):
+        j = 0
+        lab = i
+        while lab:
+            color_map[i * 3] |= (((lab >> 0) & 1) << (7 - j))
+            color_map[i * 3 + 1] |= (((lab >> 1) & 1) << (7 - j))
+            color_map[i * 3 + 2] |= (((lab >> 2) & 1) << (7 - j))
+            j += 1
+            lab >>= 3
+    color_map = color_map[3:]
+    return color_map
+
+color_map = get_color_map_list(14)
+
+def save_image_PMODE(data, path):
+    I = Image.fromarray(data).convert("P")
+    I.putpalette(color_map)
+    return I.save(path.replace(".jpg", ".png"))
 
 def save_mask(img_mask_dir, img, mask):
     mask_file_path = str((img_mask_dir / img["file_name"]).resolve())
-    save_image(mask, mask_file_path)
+    save_image_PMODE(mask, mask_file_path)
 
 
 def save_segmentation_mask(coco, img_mask_dir):
@@ -191,4 +218,5 @@ def save_segmentation_mask(coco, img_mask_dir):
             raise e
             return 0
     return __call__
+
 
