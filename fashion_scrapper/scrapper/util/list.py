@@ -39,3 +39,6 @@ def idx_self_reference(indices):
 
 def filter_not_none(lst):
     return filter(lambda x: x is not None, lst)
+
+def filter_is_dir(lst):
+    return filter(lambda x: x.is_dir(), lst)

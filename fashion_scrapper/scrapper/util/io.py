@@ -82,10 +82,13 @@ def json_load(file_path):
         data = json.load(f)
         return data
 
+#def load_img(path):
+#    image = cv2.imread(str(path))
+#    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+#    return image
+
 def load_img(path):
-    image = cv2.imread(str(path))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
+    return Image.open(path)
 
 def save_image(data, path):
     return Image.fromarray(data).save(path)
